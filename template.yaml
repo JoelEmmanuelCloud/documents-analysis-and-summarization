@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  OCRFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Timeout: 120
+      CodeUri: ocr-textract-app
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+              Resource: arn:aws:s3:::ocr-textract-output/*
+            - Effect: Allow
+              Action:
+                - textract:StartDocumentTextDetection
+                - textract:GetDocumentTextDetection
+              Resource: "*"
+      Environment:
+        Variables:
+          OUTPUT_BUCKET: !Ref OCRBucket
+      Events:
+        UploadPDF:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: post
+
+  OCRBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ocr-textract-output
+
+Outputs:
+  OCRBucketName:
+    Description: "Name of the OCR S3 bucket"
+    Value: !Ref OCRBucket
