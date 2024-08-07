@@ -7,8 +7,8 @@ Resources:
     Properties:
       Handler: app.lambda_handler
       Runtime: python3.12
-      Timeout: 120
-      CodeUri: ocr-textract-app
+      Timeout: 300
+      CodeUri: ocr-textract-app/
       Policies:
         - AWSLambdaBasicExecutionRole
         - Version: "2012-10-17"
@@ -32,6 +32,30 @@ Resources:
           Properties:
             Path: /upload
             Method: post
+
+  SummarizeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: summarize.lambda_handler
+      Runtime: python3.12
+      Timeout: 300
+      CodeUri: summarize-text-app/
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+              Resource: arn:aws:s3:::ocr-textract-output/*
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
+      Environment:
+        Variables:
+          OUTPUT_BUCKET: !Ref OCRBucket
 
   OCRBucket:
     Type: AWS::S3::Bucket
